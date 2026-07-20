@@ -6,13 +6,25 @@
 
 ## 在线地址
 
-DNS 验证完成后：
+Apple 日历可直接订阅：
+
+```text
+webcal://cbrl.bydick.com/earnings.ics
+```
+
+证书签发完成后，HTTPS 地址会自动可用：
 
 ```text
 https://cbrl.bydick.com/earnings.ics
 ```
 
-也可以在浏览器打开 [cbrl.bydick.com](https://cbrl.bydick.com/) 使用订阅地址生成页。
+证书签发期间的 HTTPS 备用地址：
+
+```text
+https://apple-earnings-calendar.soulrabit.chatgpt.site/earnings.ics
+```
+
+也可以在浏览器打开 [cbrl.bydick.com](http://cbrl.bydick.com/) 查看订阅地址说明。
 
 ## 功能
 
@@ -28,25 +40,25 @@ https://cbrl.bydick.com/earnings.ics
 
 ## 订阅地址
 
-全量财报：
+全量财报（Apple 日历优先使用 `webcal`）：
 
 ```text
-https://cbrl.bydick.com/earnings.ics
+webcal://cbrl.bydick.com/earnings.ics
 ```
 
 只订阅指定股票：
 
 ```text
-https://cbrl.bydick.com/earnings.ics?symbols=AAPL,MSFT,NVDA
+http://cbrl.bydick.com/earnings.ics?symbols=AAPL,MSFT,NVDA
 ```
 
 指定股票并拉取 60 天：
 
 ```text
-https://cbrl.bydick.com/earnings.ics?symbols=AAPL&days=60
+http://cbrl.bydick.com/earnings.ics?symbols=AAPL&days=60
 ```
 
-在 Apple 日历中选择“文件 → 新建日历订阅”，粘贴完整 HTTPS 地址即可。
+在 macOS Apple 日历中选择“文件 → 新建日历订阅”，粘贴 `webcal://` 地址即可；证书签发后也可以改用完整 HTTPS 地址。
 
 ## 本地运行
 

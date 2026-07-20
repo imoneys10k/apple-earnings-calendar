@@ -1,14 +1,52 @@
 # 美股财报 Apple 日历订阅
 
-这是一个动态 iCalendar 服务：它从 Nasdaq Earnings Calendar 拉取未来的美股财报日期，并输出 Apple 日历可以订阅的 `.ics` 文件。
+![Apple Earnings Calendar cover](public/og.png)
 
-## 使用方式
+一个无需登录、可直接订阅到 Apple 日历的动态财报日历。服务按请求从 Nasdaq Earnings Calendar 拉取未来的美股财报日期，并输出标准 iCalendar (`.ics`) 文件。
 
-- `/earnings.ics`：未来 45 天的全量财报
-- `/earnings.ics?symbols=AAPL,MSFT,NVDA`：只订阅指定股票
-- `/earnings.ics?symbols=AAPL&days=60`：指定股票，最多未来 60 天
+## 在线地址
 
-把部署后的完整 HTTPS 地址粘贴到 Apple 日历的“文件 → 新建日历订阅”。事件按全天显示，标题会标注盘前、盘后或时间未公布。
+DNS 验证完成后：
+
+```text
+https://cbrl.bydick.com/earnings.ics
+```
+
+也可以在浏览器打开 [cbrl.bydick.com](https://cbrl.bydick.com/) 使用订阅地址生成页。
+
+## 功能
+
+- 自动拉取未来 45 天的美股财报日程
+- 支持通过股票代码筛选，例如 `AAPL,MSFT,NVDA`
+- 支持把时间范围扩展到最多 60 天
+- 事件标题显示盘前、盘后或时间未公布
+- 以全天事件写入 Apple 日历，避免跨时区造成错误的具体时间
+- 事件描述包含公司名、财季截止日、EPS 市场预期和统计机构数
+- 使用稳定的事件 UID，后续刷新时不会重复创建日历事件
+- 输出标准 `text/calendar`，可被 Apple 日历、Google Calendar 等订阅
+- 通过 HTTP 缓存头建议约 6 小时更新；实际频率由日历客户端控制
+
+## 订阅地址
+
+全量财报：
+
+```text
+https://cbrl.bydick.com/earnings.ics
+```
+
+只订阅指定股票：
+
+```text
+https://cbrl.bydick.com/earnings.ics?symbols=AAPL,MSFT,NVDA
+```
+
+指定股票并拉取 60 天：
+
+```text
+https://cbrl.bydick.com/earnings.ics?symbols=AAPL&days=60
+```
+
+在 Apple 日历中选择“文件 → 新建日历订阅”，粘贴完整 HTTPS 地址即可。
 
 ## 本地运行
 
@@ -19,12 +57,12 @@ npm install
 npm run dev
 ```
 
-打开 `http://localhost:3000/` 查看订阅地址生成页；构建与测试：
+打开 `http://localhost:3000/` 查看生成页；构建与测试：
 
 ```bash
 npm test
 ```
 
-## 数据与刷新
+## 数据说明
 
-服务端每次生成订阅时按工作日查询 Nasdaq 财报日历，并通过缓存头建议约 6 小时刷新。Apple 日历的实际刷新频率还受系统设置控制。
+数据来自 Nasdaq Earnings Calendar。财报日期和盘前/盘后状态可能会被上市公司或数据源调整；本项目适合作为日程提醒，不构成投资建议。当前版本不包含财报结果、财报电话会录音或个性化推送通知。

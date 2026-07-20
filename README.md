@@ -49,16 +49,18 @@ webcal://cbrl.bydick.com/earnings.ics
 只订阅指定股票：
 
 ```text
-http://cbrl.bydick.com/earnings.ics?symbols=AAPL,MSFT,NVDA
+https://apple-earnings-calendar.soulrabit.chatgpt.site/earnings.ics?symbols=AAPL,MSFT,NVDA
 ```
 
 指定股票并拉取 60 天：
 
 ```text
-http://cbrl.bydick.com/earnings.ics?symbols=AAPL&days=60
+https://apple-earnings-calendar.soulrabit.chatgpt.site/earnings.ics?symbols=AAPL&days=60
 ```
 
 在 macOS Apple 日历中选择“文件 → 新建日历订阅”，粘贴 `webcal://` 地址即可；证书签发后也可以改用完整 HTTPS 地址。
+
+`cbrl` 是每日自动刷新的全量订阅；带筛选参数的地址使用上面的动态备用服务。
 
 ## 本地运行
 

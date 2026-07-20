@@ -1,5 +1,7 @@
 const NASDAQ_ENDPOINT = "https://api.nasdaq.com/api/calendar/earnings";
 const EASTERN_TIME_ZONE = "America/New_York";
+const NASDAQ_TIMEOUT_MS = 8_000;
+const MAX_CONCURRENT_DATES = 8;
 
 export type NasdaqEarningsRow = {
   symbol?: string;
@@ -59,22 +61,32 @@ export function dateRange(startDate: string, days: number) {
 }
 
 async function fetchDate(date: string): Promise<NasdaqEarningsRow[]> {
-  const response = await fetch(`${NASDAQ_ENDPOINT}?date=${date}`, {
-    headers: {
-      Accept: "application/json, text/plain, */*",
-      "User-Agent": "Apple-Earnings-Calendar/1.0",
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), NASDAQ_TIMEOUT_MS);
 
-  if (!response.ok) {
-    throw new Error(`Nasdaq returned ${response.status} for ${date}`);
+  try {
+    const response = await fetch(`${NASDAQ_ENDPOINT}?date=${date}`, {
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        Referer: "https://www.nasdaq.com/market-activity/earnings",
+        "User-Agent": "Apple-Earnings-Calendar/1.0",
+      },
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Nasdaq returned ${response.status} for ${date}`);
+    }
+
+    const payload = (await response.json()) as {
+      data?: { rows?: NasdaqEarningsRow[] | null };
+    };
+
+    return payload.data?.rows ?? [];
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const payload = (await response.json()) as {
-    data?: { rows?: NasdaqEarningsRow[] | null };
-  };
-
-  return payload.data?.rows ?? [];
 }
 
 function normalizeTiming(value = "") {
@@ -94,7 +106,31 @@ export async function fetchEarnings({
 } = {}) {
   const wantedSymbols = new Set(symbols.map((symbol) => symbol.toUpperCase()));
   const dates = dateRange(startDate, Math.min(Math.max(days, 1), 60));
-  const rowsByDate = await Promise.all(dates.map(async (date) => ({ date, rows: await fetchDate(date) })));
+  const rowsByDate: { date: string; rows: NasdaqEarningsRow[] }[] = [];
+  let failedDates = 0;
+
+  for (let index = 0; index < dates.length; index += MAX_CONCURRENT_DATES) {
+    const batch = dates.slice(index, index + MAX_CONCURRENT_DATES);
+    const results = await Promise.allSettled(batch.map((date) => fetchDate(date)));
+
+    results.forEach((result, resultIndex) => {
+      const date = batch[resultIndex];
+      if (result.status === "fulfilled") {
+        rowsByDate.push({ date, rows: result.value });
+      } else {
+        failedDates += 1;
+        console.warn(`Skipping Nasdaq earnings date ${date}`, result.reason);
+      }
+    });
+  }
+
+  if (!rowsByDate.length && dates.length) {
+    throw new Error("Nasdaq earnings calendar unavailable for all requested dates");
+  }
+
+  if (failedDates) {
+    console.warn(`Nasdaq earnings calendar skipped ${failedDates} date(s)`);
+  }
 
   return rowsByDate
     .flatMap(({ date, rows }) => rows.map((row) => ({
